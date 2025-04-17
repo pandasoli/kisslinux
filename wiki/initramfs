@@ -1,0 +1,72 @@
+
+KISS - Initramfs
+________________________________________________________________________________
+
++------------------------------------------------------------------------------+
+|                                                                              |
+| Create folder structure                                                      |
+|                                                                              |
+|  $ mkdir -p usr/bin usr/lib mnt/root                                         |
+|  $ ln -s usr/bin bin                                                         |
+|  $ ln -s usr/bin sbin                                                        |
+|  $ ln -s usr/lib lib                                                         |
+|  $ ln -s usr/lib lib64                                                       |
+|                                                                              |
+| Copy busybox                                                                 |
+|                                                                              |
+|  $ cp -a /usr/bin/busybox usr/bin                                            |
+|                                                                              |
+| Link utilities                                                               |
+|                                                                              |
+|  $ ln -s busybox usr/bin/switch_root                                         |
+|  $ ln -s busybox usr/bin/mount                                               |
+|  $ ln -s busybox usr/bin/unmount                                             |
+|                                                                              |
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+| usr/bin/init                                                                 |
++------------------------------------------------------------------------------+
+|                                                                              |
+|  #!/usr/bin/busybox sh                                                       |
+|                                                                              |
+|  # Mount the /proc, /sys and /dev filesystems.                               |
+|  mount -t proc none /proc                                                    |
+|  mount -t sysfs none /sys                                                    |
+|  mount -t devtmpfs devtmpfs /dev                                             |
+|                                                                              |
+|  # Do your stuff here.                                                       |
+|                                                                              |
+|  # Mount the root filesystem.                                                |
+|  mount -o ro /dev/sdxX /mnt/root                                             |
+|                                                                              |
+|  # Clean up.                                                                 |
+|  umount /proc                                                                |
+|  umount /sys                                                                 |
+|  umount /dev                                                                 |
+|                                                                              |
+|  # Boot the real thing.                                                      |
+|  exec switch_root /mnt/root /sbin/init                                       |
+|                                                                              |
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+|                                                                              |
+|  $ chmod +x usr/bin/init                                                     |
+|  $ ln -s usr/bin/init .                                                      |
+|                                                                              |
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+|                                                                              |
+|  $ find . | cpio -oH newc | gzip --best > /boot/initramfs.cpio.gz            |
+|                                                                              |
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+| /boot/grub/grub.cfg                                                          |
++------------------------------------------------------------------------------+
+|                                                                              |
+|  initrd /initramfs.cpio.gz                                                   |
+|                                                                              |
++------------------------------------------------------------------------------+

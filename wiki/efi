@@ -1,0 +1,18 @@
+
+KISS - EFI
+________________________________________________________________________________
+
++------------------------------------------------------------------------------+
+|                                                                              |
+|  Device Drivers  --->                                                        |
+|    Graphics support  --->                                         CONFIG_FB  |
+|      Frame buffer Devices  --->                                              |
+|        <*> Support for frame buffer device drivers  --->                     |
+|          [*] EFI-based Framebuffer Support                    CONFIG_FB_EFI  |
+|                                                                              |
+|  Device Drivers  --->                                                        |
+|    Graphics support  --->                                                    |
+|      Console display driver support  --->                                    |
+|        [*] Framebuffer Console support           CONFIG_FRAMEBUFFER_CONSOLE  |
+|                                                                              |
++------------------------------------------------------------------------------+

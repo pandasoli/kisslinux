@@ -2,7 +2,13 @@
 KISS - ZRAM
 ________________________________________________________________________________
 
-kernel.org/doc/html/latest/admin-guide/blockdev/zram.html
+ZRAM is a Linux kernel feature that creates compressible RAM-based block devices.
+These virtual devices effectively extend available memory by using in-RAM
+compression, similar to how swap space works in low-memory situations. Unlike
+zswap, ZRAM does not rely on a swapfile or swap partition on disk. This makes
+ZRAM particularly useful for systems with limited memory and scarce disk space.
+
+Enable ZRAM and LZ4 compression support in your kernel.
 
 +------------------------------------------------------------------------------+
 |                                                                              |
@@ -15,6 +21,26 @@ kernel.org/doc/html/latest/admin-guide/blockdev/zram.html
 |      <*> LZ4                                              CONFIG_CRYPTO_LZ4  |
 |                                                                              |
 +------------------------------------------------------------------------------+
+
+The default compression algorithm is LZO but LZ4 is recommended.
+
+Building 'Compressed RAM block device support' as a module is recommended, as it
+allows dynamic block device creation. If built into the kernel, pass
+`zram.num_devices=X` via the kernel commandline (bootloader or built-in).
+
+
+Setup
+________________________________________________________________________________
+
+ZRAM allows creating compressed block devices dynamically during runtime or
+at boot. A quick method using an `/etc/rc.d/zram.{boot,pre.shutdown}` is shown
+below. Since multiple zram devices are supported, creating several can improve
+performance on multicore systems by parallelizing compression/decompression.
+
+The compression algorithm for a zram device is fixed at initialization and
+cannot be changed later, unlike zswap.
+
+$SIZE below can be given in bytes or suffixed by K,M,G.
 
 +------------------------------------------------------------------------------+
 | /etc/rc.d/zram.boot                                                          |
@@ -71,3 +97,13 @@ kernel.org/doc/html/latest/admin-guide/blockdev/zram.html
 |  echo 1 > /sys/block/zram4/reset                                             |
 |                                                                              |
 +------------------------------------------------------------------------------+
+
+Note: because ZRAM has a 2:1 compression ratio, a total disk size of no more
+than twice the amount of available RAM should be selected - otherwise, space
+will be wasted.
+
+
+References
+________________________________________________________________________________
+
+* https://kernel.org/doc/Documentation/blockdev/zram.txt

@@ -2,11 +2,23 @@
 KISS - Initramfs
 ________________________________________________________________________________
 
+initramfs (initial RAM filesystem) is a lightweight root filesystem loaded into
+memory during Linux boot. It contains essential tools and drivers needed to
+mount the real root filesystem, especially when it’s on encrypted, network, or
+LVM storage. Unlike traditional initrd, initramfs is a cpio archive integrated
+into the kernel, eliminating the need for a separate filesystem driver.
+
+Once the real root is mounted, the kernel switches to it and unloads initramfs
+from memory. This makes it critical for systems with complex storage setups but
+minimal overhead after boot.
+
+First, inside of a folder create the base tree with the necessary binaries.
+
 +------------------------------------------------------------------------------+
 |                                                                              |
 | Create folder structure                                                      |
 |                                                                              |
-|  $ mkdir -p usr/bin usr/lib mnt/root                                         |
+|  $ mkdir -p usr/bin usr/lib mnt/root proc sys dev mnt                        |
 |  $ ln -s usr/bin bin                                                         |
 |  $ ln -s usr/bin sbin                                                        |
 |  $ ln -s usr/lib lib                                                         |
@@ -24,13 +36,16 @@ ________________________________________________________________________________
 |                                                                              |
 +------------------------------------------------------------------------------+
 
+Create the init script. If you need you can replace '/dev/sdxX' by 'UUID=' with
+the UUID of your rootfs partition.
+
 +------------------------------------------------------------------------------+
-| usr/bin/init                                                                 |
+| init                                                                         |
 +------------------------------------------------------------------------------+
 |                                                                              |
 |  #!/usr/bin/busybox sh                                                       |
 |                                                                              |
-|  # Mount the /proc, /sys and /dev filesystems.                               |
+|  # Mount pseudo filesystems.                                                 |
 |  mount -t proc none /proc                                                    |
 |  mount -t sysfs none /sys                                                    |
 |  mount -t devtmpfs devtmpfs /dev                                             |
@@ -41,27 +56,30 @@ ________________________________________________________________________________
 |  mount -o ro /dev/sdxX /mnt/root                                             |
 |                                                                              |
 |  # Clean up.                                                                 |
-|  umount /proc                                                                |
-|  umount /sys                                                                 |
-|  umount /dev                                                                 |
+|  umount /proc /sys /dev                                                      |
 |                                                                              |
 |  # Boot the real thing.                                                      |
 |  exec switch_root /mnt/root /sbin/init                                       |
 |                                                                              |
 +------------------------------------------------------------------------------+
 
+Give execution permission to the init script.
+
 +------------------------------------------------------------------------------+
 |                                                                              |
-|  $ chmod +x usr/bin/init                                                     |
-|  $ ln -s usr/bin/init .                                                      |
+|  $ chmod +x init                                                             |
 |                                                                              |
 +------------------------------------------------------------------------------+
+
+Package everything and install.
 
 +------------------------------------------------------------------------------+
 |                                                                              |
 |  $ find . | cpio -oH newc | gzip --best > /boot/initramfs.cpio.gz            |
 |                                                                              |
 +------------------------------------------------------------------------------+
+
+To load the initramfs on boot you'll need to add this to your grub entry.
 
 +------------------------------------------------------------------------------+
 | /boot/grub/grub.cfg                                                          |
